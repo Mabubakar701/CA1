@@ -1,0 +1,47 @@
+---
+- name: Configure web server
+  hosts: webservers
+  become: yes  # This enables sudo privileges
+  
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - docker.io
+        - python3-pip
+        - nodejs
+        - npm
+
+    - name: Start and enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add azureuser to docker group
+      user:
+        name: azureuser
+        groups: docker
+        append: yes
+
+    - name: Install Docker Python module
+      pip:
+        name: docker
+        state: present
+
+    # Pull and run the web application container
+    - name: Pull and run web application
+      docker_container:
+        name: webapp
+        image: nginx:latest  # We'll change this to your web app image later
+        state: started
+        ports:
+          - "80:80"
+        restart_policy: always

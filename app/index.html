@@ -1,13 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Simple HTML Page</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ireland Weather</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom, #b3e0ff, #ffffff);
+      color: #333;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #00796b;
+      color: white;
+      padding: 20px 0;
+    }
+    .weather-container {
+      margin: 30px auto;
+      width: 90%;
+      max-width: 600px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      padding: 20px;
+    }
+    .city {
+      font-size: 1.8em;
+      margin-bottom: 10px;
+    }
+    .temperature {
+      font-size: 2.5em;
+      margin: 10px 0;
+      color: #00796b;
+    }
+    .condition {
+      font-size: 1.2em;
+      font-style: italic;
+      margin-bottom: 20px;
+    }
+    footer {
+      margin-top: 40px;
+      padding: 15px;
+      background-color: #00796b;
+      color: white;
+      font-size: 0.9em;
+    }
+  </style>
 </head>
 <body>
-  <h1>Hello, World!</h1>
-  <p>abubakar.</p>>
-  <button onclick="alert('You clicked the button!')">Click Me</button>
+  <header>
+    <h1>🇮🇪 Ireland Weather</h1>
+    <p>Stay updated with the latest weather conditions across Ireland</p>
+  </header>
+
+  <div class="weather-container">
+    <div class="city">Dublin</div>
+    <div class="temperature">12°C</div>
+    <div class="condition">Partly Cloudy</div>
+    <p>Humidity: 75% | Wind: 18 km/h</p>
+  </div>
+
+  <div class="weather-container">
+    <div class="city">Cork</div>
+    <div class="temperature">10°C</div>
+    <div class="condition">Light Rain</div>
+    <p>Humidity: 80% | Wind: 22 km/h</p>
+  </div>
+
+  <footer>
+    <p>Weather data last updated: November 5, 2025</p>
+    <p>Data source: Met Éireann</p>
+  </footer>
 </body>
 </html>

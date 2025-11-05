@@ -1,0 +1,16 @@
+# Ignore Terraform local directories and state files (and provider binaries)
+# Ignore the terraform working directory where providers and plugins are installed
+terraform/.terraform/
+
+# Ignore Terraform state files and backups
+terraform/*.tfstate
+terraform/*.tfstate.backup
+
+# Ignore the Terraform lock file created by init
+terraform/.terraform.lock.hcl
+
+# Specifically ignore the large provider binary that caused the push failure
+terraform/.terraform/**/terraform-provider-azurerm_v3.117.1_x5.exe
+
+# Optional: ignore variable definition files that may contain secrets
+*.tfvars

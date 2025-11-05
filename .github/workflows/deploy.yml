@@ -63,4 +63,27 @@ jobs:
               echo "Stopped apache/httpd"
             fi
 
-            # If still in use, show
+            # If still in use, show listener info and try to extract PIDs to kill (last resort)
+            if ss -ltnp 2>/dev/null | grep -q ':80 '; then
+              echo "Port 80 still in use. Showing listener info:"
+              ss -ltnp | grep ':80' || true
+              # Extract PID(s) from ss output (format may vary) and attempt to kill
+              pids=$(ss -ltnp | awk '/:80/ {match($0,"pid=[0-9]+"); if (RSTART) {pidstr=substr($0,RSTART,RLENGTH); gsub(/pid=/,"",pidstr); print pidstr}}' | sort -u)
+              for pid in $pids; do
+                if [ -n "$pid" ]; then
+                  echo "Attempting to kill PID $pid"
+                  sudo kill "$pid" || true
+                fi
+              done
+            fi
+          fi
+
+          # Final check: if still occupied, abort to avoid silent failures
+          if ss -ltnp 2>/dev/null | grep -q ':80 '; then
+            echo "ERROR: host port 80 is still allocated after attempts to free it. Aborting."
+            ss -ltnp | grep ':80' || true
+            exit 1
+          fi
+
+          # Run the new container binding host port 80
+          docker run -d --name myapp -p 80:80 ${{ secrets.DOCKER_USERNAME }}/myapp:latest

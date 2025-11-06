@@ -94,7 +94,7 @@
     #     warn: false
 
     - name: Run new container
-      shell: docker run -d --name webapp -p 80:80 --restart always {{ docker_image }}:{{ latest }}
+      shell: docker run -d --name webapp -p 80:80 --restart always {{ docker_image }}
       register: run_result
 
     - name: Show container ID

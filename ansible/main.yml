@@ -47,7 +47,7 @@
       ignore_errors: yes
 
     - name: Pull latest Docker image
-      shell: docker pull {{ docker_image }}:{{ docker_tag }}
+      shell: docker pull bakardoc/
       register: pull_result
 
     - name: Show pull result

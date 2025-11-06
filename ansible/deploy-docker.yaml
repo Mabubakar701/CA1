@@ -1,0 +1,141 @@
+---
+- name: Deploy Docker container on Azure VM
+  hosts: all  # Changed from 'web' to 'all' to match the direct host inventory
+  become: yes
+  gather_facts: yes  # Ensure we gather host facts
+
+  pre_tasks:
+    - name: Debug connection information
+      debug:
+        msg: 
+          - "Connected to host: {{ inventory_hostname }}"
+          - "Using SSH user: {{ ansible_user }}"
+          - "Using Python: {{ ansible_python_version }}"
+      
+    # - name: Ensure host is reachable
+    #   ping:
+    #   register: ping_result
+      
+    # - name: Show ping result
+    #   debug:
+    #     var: ping_result
+
+  tasks:
+    # Step 1: Ensure Docker is installed
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    # Step 2: Ensure Docker service is running
+    - name: Enable and start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    # Step 3: Check if container exists
+    - name: Check existing containers
+      command: docker ps -a
+      register: docker_containers
+      changed_when: false
+
+    # Step 4: Stop container only if it exists
+    - name: Stop existing container if running
+      command: docker stop webapp
+      when: "'webapp' in docker_containers.stdout"
+      ignore_errors: yes
+
+    # Step 5: Remove container only if exists
+    - name: Remove existing container
+      command: docker rm webapp
+      when: "'webapp' in docker_containers.stdout"
+      ignore_errors: yes
+
+    # # Step 6: Remove old images to prevent caching issues
+    # - name: Remove old images
+    #   shell: docker rmi hussaindbs/html:latest || true
+    #   ignore_errors: yes
+
+    # Step 7: Check Docker service status
+    - name: Verify Docker service
+      service_facts:
+      register: service_state
+
+    - name: Show Docker service status
+      debug:
+        msg: "Docker service state: {{ service_state.ansible_facts.services['docker.service'].state }}"
+
+    # Step 8: Pull fresh image to ensure latest version
+    - name: Pull latest Docker image
+      command: docker pull hussaindbs/html:latest
+      register: pull_result
+      until: pull_result.rc == 0
+      retries: 3
+      delay: 5
+
+    - name: Show pull results
+      debug:
+        var: pull_result.stdout_lines
+
+    # Step 9: Show current Docker images
+    - name: List all Docker images
+      command: docker images
+      register: docker_images
+      
+    - name: Display Docker images
+      debug:
+        var: docker_images.stdout_lines
+
+    # Step 10: Run container with proper restart policy and health check
+    # Exposes port 80 externally so website becomes accessible
+    - name: Run new container
+      command: >
+        docker run -d
+        --name webapp
+        --restart unless-stopped
+        -p 80:80
+        hussaindbs/html:latest
+      register: container_run
+      
+    - name: Display container run result
+      debug:
+        var: container_run.stdout_lines
+        
+    # Step 11: Verify container is running
+    - name: Wait for container to be running
+      command: docker ps -f name=webapp -f status=running --format {% raw %}'{{.Status}}'{% endraw %}
+      register: container_status
+      until: container_status.stdout.find('Up') != -1
+      retries: 5
+      delay: 5
+      
+    - name: Show container status
+      debug:
+        var: container_status.stdout_lines
+        
+    # Step 12: Check container logs for any issues
+    - name: Get container logs
+      command: docker logs webapp
+      register: container_logs
+      
+    - name: Display container logs
+      debug:
+        var: container_logs.stdout_lines
+
+    # Step 13: List running containers
+    - name: Show running Docker containers
+      command: docker ps -a
+      register: running_containers
+      changed_when: false
+
+    - name: Print running container info
+      debug:
+        var: running_containers.stdout_lines
+
+    # Step 14: Display access web link in the terminal
+    - name: Show public access URL
+      debug:
+        msg: "Web application running at: http://{{ ansible_host }}"
+

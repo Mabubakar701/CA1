@@ -4,6 +4,13 @@ variable "location" {
   default     = "francecentral" # This region allowed to create VM that is why using  
 ]}
 
+# SSH public key to provision on the VM (pass via TF_VAR_admin_public_key from CI)
+variable "admin_public_key" {
+  description = "SSH public key string for the admin user"
+  type        = string
+  default     = ""
+}
+
 # --- 1. RESOURCE GROUP ---
 resource "azurerm_resource_group" "rg" {
   name     = "DevOps-Server-RG"
@@ -104,7 +111,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   # Insert your local public key here
   admin_ssh_key {
     username   = "azureuser"
-    public_key = file("C:/Users/Home/.ssh/id_rsa.pub") # <<< CHECK THIS PATH ///username >>>
+    public_key = var.admin_public_key
   }
   os_disk {
     caching              = "ReadWrite"

@@ -20,22 +20,57 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.7
+
+    - name: Terraform init & apply
+      working-directory: terraform
+      env:
+        TF_VAR_admin_public_key: ${{ secrets.VM_SSH_PUB }}
+      run: |
+        terraform init -input=false
+        terraform apply -auto-approve -input=false
+
+    - name: Update Ansible inventory with Terraform output
+      working-directory: terraform
+      run: |
+        echo "Fetching Terraform output"
+        IP=$(terraform output -raw public_ip_address)
+        echo "azure-server ansible_host=${IP} ansible_user=azureuser ansible_ssh_private_key_file=~/.ssh/id_rsa" > ../ansible/inventory.ini
+
     - name: Build Docker image
       run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/myapp:latest .
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/myapp:latest ./app
 
     - name: Push Docker image
       run: |
         docker push ${{ secrets.DOCKER_USERNAME }}/myapp:latest
 
-    - name: Deploy to Azure VM via SSH
-      uses: appleboy/ssh-action@v1.2.0
-      with:
-        host: ${{ secrets.VM_HOST }}
-        username: ${{ secrets.VM_USER }}
-        key: ${{ secrets.VM_SSH_KEY }}
-        script: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/myapp:latest
-          docker stop myapp || true
-          docker rm myapp || true
-          docker run -d --name myapp -p 80:80 ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+    - name: Set up VM SSH key on runner
+      run: |
+        mkdir -p ~/.ssh
+        printf '%s' "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+
+    - name: Install Ansible
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install ansible
+
+    - name: Run Ansible playbook to deploy image
+      env:
+        ANSIBLE_HOST_KEY_CHECKING: 'False'
+      run: |
+        ansible-playbook -i ansible/inventory.ini ansible/main.yml --extra-vars "docker_user=${{ secrets.DOCKER_USERNAME }}"
+
+    - name: Cleanup runner SSH key
+      if: always()
+      run: |
+        shred -u ~/.ssh/id_rsa || rm -f ~/.ssh/id_rsa || true

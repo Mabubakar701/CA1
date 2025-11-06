@@ -2,6 +2,10 @@
 - name: Complete DevOps Deployment
   hosts: webservers
   become: yes
+  vars:
+    # Defaults - can be overridden with --extra-vars or inventory/group_vars
+    docker_image: "{{ lookup('env','DOCKER_USERNAME') | default('your-docker-username') }}/myapp"
+    docker_tag: "latest"
   
   tasks:
     - name: Update apt cache

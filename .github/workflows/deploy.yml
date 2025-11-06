@@ -22,8 +22,7 @@ jobs:
 
     - name: Build Docker image
       run: |
-        # Build using the Dockerfile inside the `app` folder
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/myapp:latest ./app
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/myapp:latest .
 
     - name: Push Docker image
       run: |
@@ -37,53 +36,6 @@ jobs:
         key: ${{ secrets.VM_SSH_KEY }}
         script: |
           docker pull ${{ secrets.DOCKER_USERNAME }}/myapp:latest
-
-          # Stop/remove container named myapp if exists
           docker stop myapp || true
           docker rm myapp || true
-
-          # If some other container is publishing host port 80, stop and remove it
-          occupant=$(docker ps --format '{{.ID}} {{.Names}} {{.Ports}}' | awk '/0.0.0.0:80->/ {print $1; exit}')
-          if [ -n "$occupant" ]; then
-            echo "Found container using host port 80: $occupant — stopping and removing it"
-            docker stop "$occupant" || true
-            docker rm "$occupant" || true
-          fi
-
-          # If port 80 is still in use by a non-container process, try to stop common services or kill the process
-          if ss -ltnp 2>/dev/null | grep -q ':80 '; then
-            echo "Port 80 appears in use by a non-container process. Attempting to stop common web services..."
-            # Try stopping known services; use sudo if needed
-            if sudo systemctl is-active --quiet nginx; then
-              sudo systemctl stop nginx
-              echo "Stopped nginx"
-            fi
-            if sudo systemctl is-active --quiet apache2 || sudo systemctl is-active --quiet httpd; then
-              sudo systemctl stop apache2 || sudo systemctl stop httpd
-              echo "Stopped apache/httpd"
-            fi
-
-            # If still in use, show listener info and try to extract PIDs to kill (last resort)
-            if ss -ltnp 2>/dev/null | grep -q ':80 '; then
-              echo "Port 80 still in use. Showing listener info:"
-              ss -ltnp | grep ':80' || true
-              # Extract PID(s) from ss output (format may vary) and attempt to kill
-              pids=$(ss -ltnp | awk '/:80/ {match($0,"pid=[0-9]+"); if (RSTART) {pidstr=substr($0,RSTART,RLENGTH); gsub(/pid=/,"",pidstr); print pidstr}}' | sort -u)
-              for pid in $pids; do
-                if [ -n "$pid" ]; then
-                  echo "Attempting to kill PID $pid"
-                  sudo kill "$pid" || true
-                fi
-              done
-            fi
-          fi
-
-          # Final check: if still occupied, abort to avoid silent failures
-          if ss -ltnp 2>/dev/null | grep -q ':80 '; then
-            echo "ERROR: host port 80 is still allocated after attempts to free it. Aborting."
-            ss -ltnp | grep ':80' || true
-            exit 1
-          fi
-
-          # Run the new container binding host port 80
           docker run -d --name myapp -p 80:80 ${{ secrets.DOCKER_USERNAME }}/myapp:latest

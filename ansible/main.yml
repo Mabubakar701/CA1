@@ -13,15 +13,15 @@
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: Install required packages
-      apt:
-        name: "{{ item }}"
-        state: present
-      loop:
-        - docker.io
-        - python3-pip
-        - nodejs
-        - npm
+    # - name: Install required packages
+    #   apt:
+    #     name: "{{ item }}"
+    #     state: present
+    #   loop:
+    #     - docker.io
+    #     - python3-pip
+    #     - nodejs
+    #     - npm
 
     - name: Start and enable Docker service
       service:
@@ -35,10 +35,10 @@
         groups: docker
         append: yes
 
-    - name: Install Docker Python module
-      pip:
-        name: docker
-        state: present
+    # - name: Install Docker Python module
+    #   pip:
+    #     name: docker
+    #     state: present
 
     - name: Stop and remove existing container
       shell: |
@@ -94,7 +94,7 @@
     #     warn: false
 
     - name: Run new container
-      shell: docker run -d --name webapp -p 80:80 --restart always {{ docker_image }}
+      shell: docker run -d --name webapp -p 80:80 {{ docker_image }}
       register: run_result
 
     - name: Show container ID

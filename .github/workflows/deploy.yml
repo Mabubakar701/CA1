@@ -6,9 +6,6 @@ on:
       - main
   workflow_dispatch: # Enable manual trigger from GitHub UI
 
-env:
-  DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/devops-sample-app # CHANGE 'YOUR-USERNAME'
-  
 
 jobs:
   build-and-deploy:
@@ -56,7 +53,7 @@ jobs:
           
           # Run the Ansible playbook with variables
           ansible-playbook -i /tmp/inventory.ini ansible/main.yml \
-            -e "docker_image=${{ secrets.DOCKER_USERNAME }}/devops-sample-app" \
+            -e "docker_image=${{ secrets.DOCKER_USERNAME }}/webapp" \
             -e "docker_tag=latest" \
             -v
         env:

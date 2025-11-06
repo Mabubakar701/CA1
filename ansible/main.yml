@@ -66,32 +66,32 @@
     #   args:
     #     warn: false
 
-    - name: Stop common web services if they are listening on port 80
-      shell: |
-        # If a system service (nginx/apache) is binding port 80, try to stop it
-        if ss -ltnp 2>/dev/null | grep -q ':80 '; then
-          echo "Port 80 appears in use by a non-container process. Attempting to stop nginx/apache..."
-          if systemctl is-active --quiet nginx 2>/dev/null; then
-            sudo systemctl stop nginx || true
-            echo "Stopped nginx"
-          fi
-          if systemctl is-active --quiet apache2 2>/dev/null; then
-            sudo systemctl stop apache2 || true
-            echo "Stopped apache2"
-          fi
-        fi
-      args:
-        warn: false
+    # - name: Stop common web services if they are listening on port 80
+    #   shell: |
+    #     # If a system service (nginx/apache) is binding port 80, try to stop it
+    #     if ss -ltnp 2>/dev/null | grep -q ':80 '; then
+    #       echo "Port 80 appears in use by a non-container process. Attempting to stop nginx/apache..."
+    #       if systemctl is-active --quiet nginx 2>/dev/null; then
+    #         sudo systemctl stop nginx || true
+    #         echo "Stopped nginx"
+    #       fi
+    #       if systemctl is-active --quiet apache2 2>/dev/null; then
+    #         sudo systemctl stop apache2 || true
+    #         echo "Stopped apache2"
+    #       fi
+    #     fi
+    #   args:
+    #     warn: false
 
-    - name: Final check - abort if port 80 still allocated
-      shell: |
-        if ss -ltnp 2>/dev/null | grep -q ':80 '; then
-          echo "ERROR: host port 80 is still allocated after attempts to free it. Showing listeners and aborting."
-          ss -ltnp | grep ':80' || true
-          exit 1
-        fi
-      args:
-        warn: false
+    # - name: Final check - abort if port 80 still allocated
+    #   shell: |
+    #     if ss -ltnp 2>/dev/null | grep -q ':80 '; then
+    #       echo "ERROR: host port 80 is still allocated after attempts to free it. Showing listeners and aborting."
+    #       ss -ltnp | grep ':80' || true
+    #       exit 1
+    #     fi
+    #   args:
+    #     warn: false
 
     - name: Run new container
       shell: docker run -d --name webapp -p 80:80 --restart always {{ docker_image }}:{{ docker_tag }}

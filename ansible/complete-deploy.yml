@@ -1,0 +1,71 @@
+---
+- name: Complete DevOps Deployment
+  hosts: webservers
+  become: yes
+  
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install required packages
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - docker.io
+        - python3-pip
+        - nodejs
+        - npm
+
+    - name: Start and enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add azureuser to docker group
+      user:
+        name: azureuser
+        groups: docker
+        append: yes
+
+    - name: Install Docker Python module
+      pip:
+        name: docker
+        state: present
+
+    - name: Stop and remove existing container
+      shell: |
+        docker stop webapp || true
+        docker rm webapp || true
+      ignore_errors: yes
+
+    - name: Pull latest Docker image
+      shell: docker pull {{ docker_image }}:{{ docker_tag }}
+      register: pull_result
+
+    - name: Show pull result
+      debug:
+        msg: "Pulled image: {{ docker_image }}:{{ docker_tag }}"
+
+    - name: Run new container
+      shell: docker run -d --name webapp -p 80:80 --restart always {{ docker_image }}:{{ docker_tag }}
+      register: run_result
+
+    - name: Show container ID
+      debug:
+        msg: "Container ID: {{ run_result.stdout }}"
+
+    - name: Wait for container to start
+      pause:
+        seconds: 2
+
+    - name: Verify container is running
+      shell: docker ps | grep webapp
+      register: container_check
+
+    - name: Display deployment status
+      debug:
+        msg: "✅ Container deployed successfully! Image: {{ docker_image }}:{{ docker_tag }}"

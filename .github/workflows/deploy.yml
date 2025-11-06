@@ -22,7 +22,8 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/myapp:latest .
+        # Build using the Dockerfile inside the `app` folder
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/myapp:latest ./app
 
     - name: Push Docker image
       run: |

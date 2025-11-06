@@ -54,17 +54,17 @@
       debug:
         msg: "Pulled image: {{ docker_image }}:{{ docker_tag }}"
 
-    - name: Stop and remove any container using port 80
-  shell: |
-    cid=$(docker ps --format '{{.ID}} {{.Ports}}' | awk '/0.0.0.0:80->/ {print $1; exit}')
-    if [ -n "$cid" ]; then
-      echo "Stopping and removing container on port 80: $cid"
-      docker stop "$cid"
-      docker rm "$cid"
-    fi
-  args:
-    warn: false
-
+    # - name: Free host port 80 if used by another container
+    #   shell: |
+    #     # Find any container publishing host port 80 and stop/remove it
+    #     occ=$(docker ps --format '{{.ID}} {{.Names}} {{.Ports}}' | awk '/0.0.0.0:80->/ {print $1; exit}')
+    #     if [ -n "$occ" ]; then
+    #       echo "Found container using host port 80: $occ — stopping and removing it"
+    #       docker stop "$occ" || true
+    #       docker rm "$occ" || true
+    #     fi
+    #   args:
+    #     warn: false
 
     - name: Stop common web services if they are listening on port 80
       shell: |

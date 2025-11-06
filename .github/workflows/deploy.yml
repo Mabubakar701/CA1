@@ -39,17 +39,3 @@ jobs:
           docker stop myapp || true
           docker rm myapp || true
           docker run -d --name myapp -p 80:80 ${{ secrets.DOCKER_USERNAME }}/myapp:latest
-- name: Setup Terraform
-  uses: hashicorp/setup-terraform@v3
-
-- name: Terraform Apply
-  run: terraform apply -auto-approve
-
-  - name: Run Ansible Playbook
-  uses: dawidd6/action-ansible-playbook@v2
-  with:
-    playbook: deploy.yml
-    key: ${{ secrets.VM_SSH_KEY }}
-    inventory: |
-      [azure_vm]
-      ${{ secrets.VM_HOST }} ansible_user=${{ secrets.VM_USER }}

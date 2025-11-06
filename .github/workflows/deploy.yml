@@ -8,7 +8,7 @@ on:
 
 env:
   DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/devops-sample-app # CHANGE 'YOUR-USERNAME'
-  DOCKER_TAG: latest
+  
 
 jobs:
   build-and-deploy:
@@ -24,12 +24,14 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./app  # Use the Dockerfile and code in the 'app' directory
-          push: true
-          tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+      - name: Build Docker image
+        run:
+          cd app
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/webapp:latest
+
+      - name: Push Docker image to Docker Hub
+        run:
+          docker push ${{ secrets.DOCKER_USERNAME }}/webapp:latest
 
       # --- 2. DEPLOY CONTAINER (CD) using Ansible ---
       - name: Setup SSH key for Ansible

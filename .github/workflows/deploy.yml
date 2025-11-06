@@ -52,7 +52,7 @@ jobs:
           EOF
           
           # Run the Ansible playbook with variables
-          ansible-playbook -i /tmp/inventory.ini ansible/complete-deploy.yml \
+          ansible-playbook -i /tmp/inventory.ini ansible/deploy.yml \
             -e "docker_image=${{ secrets.DOCKER_USERNAME }}/devops-sample-app" \
             -e "docker_tag=latest" \
             -v

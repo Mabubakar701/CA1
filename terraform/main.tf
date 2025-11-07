@@ -1,7 +1,7 @@
 # --- VARIABLES (Optional but good practice to define location) ---
 variable "location" {
   description = "The Azure region to deploy resources in"
-  default     = "francecentral" # This region allowed to create VM that is why using  
+  default     = "francecentral" # This region allowed to create VM faced some issue with other region
 ]}
 
 # --- 1. RESOURCE GROUP ---

@@ -2,7 +2,7 @@
 variable "location" {
   description = "The Azure region to deploy resources in"
   default     = "francecentral" # This region allowed to create VM faced some issue with other region
-]}
+}
 
 # --- 1. RESOURCE GROUP ---
 resource "azurerm_resource_group" "rg" {
